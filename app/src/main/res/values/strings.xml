@@ -1,0 +1,9 @@
+<resources>
+    <string name="app_name">外地电话拦截</string>
+    <string name="youmi_appId">86e3d3ada381658d</string>
+    <string name="youmi_appSecret">242a922de6958172</string>
+    <string name="qq_app_id">1104994532</string>
+    <string name="qq_app_key">u3p2dxw0YyKksQkl</string>
+    <string name="wx_app_id">wxb74bf427f8f7a1d2</string>
+    <string name="wx_app_secret">d4624c36b6795d1d99dcf0547af5443d</string>
+</resources>

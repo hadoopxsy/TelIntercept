@@ -1,0 +1,66 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical"
+    >
+
+    <RelativeLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:padding="10dp">
+
+        <ImageView
+            android:id="@+id/iv_back"
+            style="@style/Nav_Button_Back"/>
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_centerInParent="true"
+            android:text="关于"
+            android:textSize="20sp"/>
+
+    </RelativeLayout>
+
+    <ImageView
+        android:layout_width="match_parent"
+        android:layout_height="1dp"
+        android:background="#5fff"/>
+
+    <ScrollView
+        android:layout_width="match_parent"
+        android:layout_height="match_parent">
+
+        <LinearLayout
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:orientation="vertical">
+
+            <com.dean.phonesafe.ui.TitleDescView
+                android:id="@+id/td_setting_version"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                app:title="版本号"/>
+
+            <com.dean.phonesafe.ui.SettingArrowView
+                android:id="@+id/sav_setting_update"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                app:title="检查更新"/>
+
+            <com.dean.phonesafe.ui.SettingArrowView
+                android:id="@+id/sav_setting_share"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                app:title="分享给好友"/>
+            <com.dean.phonesafe.ui.SettingArrowView
+                android:id="@+id/sav_setting_ping"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                app:title="去评分"/>
+        </LinearLayout>
+    </ScrollView>
+</LinearLayout>

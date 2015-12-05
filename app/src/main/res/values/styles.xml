@@ -1,0 +1,34 @@
+<resources>
+
+    <!-- Base application theme. -->
+    <style name="AppTheme" parent="Theme.AppCompat.NoActionBar">
+        <!-- Customize your theme here. -->
+    </style>
+    <style name="Nav_Button">
+        <item name="android:clickable">true</item>
+    </style>
+    <!-- 默认导航图标大小 -->
+    <style name="Nav_Button_Icon" parent="Nav_Button">
+        <item name="android:layout_width">25dp</item>
+        <item name="android:layout_height">25dp</item>
+    </style>
+    <!-- 返回按钮样式 -->
+    <style name="Nav_Button_Back" parent="Nav_Button_Icon">
+        <item name="android:src">@drawable/nav_back_bg</item>
+        <item name="android:layout_centerVertical">true</item>
+        <item name="android:layout_alignParentLeft">true</item>
+        <item name="android:clickable">true</item>
+    </style>
+    <!-- 设置按钮样式 -->
+    <style name="Nav_Button_Setting" parent="Nav_Button_Icon">
+        <item name="android:src">@drawable/nav_setting_bg</item>
+        <item name="android:layout_centerVertical">true</item>
+        <item name="android:layout_alignParentRight">true</item>
+    </style>
+    <!-- 添加按钮样式 -->
+    <style name="Nav_Button_Add" parent="Nav_Button_Icon">
+        <item name="android:src">@drawable/nav_add_bg</item>
+        <item name="android:layout_centerVertical">true</item>
+        <item name="android:layout_alignParentRight">true</item>
+    </style>
+</resources>

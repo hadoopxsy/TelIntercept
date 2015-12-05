@@ -1,0 +1,51 @@
+<?xml version="1.0" encoding="utf-8"?>
+<merge xmlns:android="http://schemas.android.com/apk/res/android"
+       xmlns:slideswitch="http://schemas.android.com/apk/res-auto"
+    >
+
+    <RelativeLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:padding="15dp">
+
+        <TextView
+            android:id="@+id/tv_ui_settingcheckview_title"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_alignParentLeft="true"
+            android:text="开启自动更新"
+            android:textSize="18sp"/>
+
+        <TextView
+            android:id="@+id/tv_ui_settingcheckview_desc"
+            android:layout_below="@id/tv_ui_settingcheckview_title"
+            android:layout_marginTop="3dp"
+            android:textColor="#5ccc"
+            android:text="允许程序自动更新"
+            android:textSize="14dp"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"/>
+
+
+        <com.dean.phonesafe.ui.SlideSwitch
+            android:layout_centerVertical="true"
+            android:id="@+id/ss_switch"
+            android:layout_width="50dp"
+            android:layout_height="25dp"
+            android:layout_alignParentRight="true"
+            slideswitch:shape="circle"
+            slideswitch:themeColor="#009ad6">
+        </com.dean.phonesafe.ui.SlideSwitch>
+
+    </RelativeLayout>
+
+    <ImageView
+        android:id="@+id/iv_ui_settingcheckview_divider"
+        android:layout_width="match_parent"
+        android:layout_height="1dp"
+        android:layout_marginLeft="10dp"
+        android:layout_marginRight="10dp"
+        android:background="#2fff"/>
+</merge>
+
+    <!--</LinearLayout>-->

@@ -1,0 +1,45 @@
+<?xml version="1.0" encoding="utf-8"?>
+<merge xmlns:android="http://schemas.android.com/apk/res/android">
+
+    <RelativeLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:padding="15dp">
+
+        <TextView
+            android:id="@+id/tv_ui_settingchangeview_title"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_alignParentLeft="true"
+            android:text="来电归属地背景"
+            android:textSize="18sp"/>
+
+        <TextView
+            android:id="@+id/tv_ui_settingchangeview_desc"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_below="@id/tv_ui_settingchangeview_title"
+            android:layout_marginTop="3dp"
+            android:text="金属黑"
+            android:textColor="#5ccc"
+            android:textSize="14sp"/>
+
+        <ImageView
+            android:id="@+id/iv_arrow"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_alignParentRight="true"
+            android:layout_centerVertical="true"
+            android:layout_marginRight="8dp"
+            android:src="@drawable/settingview_changedesc_bg"/>
+    </RelativeLayout>
+
+    <ImageView
+        android:id="@+id/iv_ui_settingview_divider"
+        android:layout_width="match_parent"
+        android:layout_height="1dp"
+        android:layout_marginLeft="10dp"
+        android:layout_marginRight="10dp"
+        android:background="#2fff"/>
+
+</merge>
