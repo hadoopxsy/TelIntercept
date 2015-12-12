@@ -79,7 +79,7 @@ public class ContactUtil {
      */
     public static boolean existsNumber(Context context,String number){
         boolean exists=false;
-        Cursor dataCursor = context.getContentResolver().query(ContactsContract.Data.CONTENT_URI, new String[]{ContactsContract.Data.DATA1}, ContactsContract.CommonDataKinds.Phone.NUMBER + " = ?", new String[]{number}, null);
+        Cursor dataCursor = context.getContentResolver().query(ContactsContract.Data.CONTENT_URI, new String[]{ContactsContract.Data.DATA1}, "replace(data1,' ','') = ?", new String[]{number}, null);
         exists = dataCursor.getCount()>0;
         dataCursor.close();
         return exists;
@@ -98,7 +98,7 @@ public class ContactUtil {
         contentValues.put("display_name", name);
         //在raw_contact表中添加一条记录
         Uri uri = context.getContentResolver().insert(ContactsContract.RawContacts.CONTENT_URI, contentValues);
-        DebugLog.d("lastPathSegment:"+uri.getLastPathSegment());
+        //DebugLog.d("lastPathSegment:"+uri.getLastPathSegment());
         if(!uri.getLastPathSegment().matches("^\\d+$"))
             return 0;
         int id = Integer.parseInt(uri.getLastPathSegment());

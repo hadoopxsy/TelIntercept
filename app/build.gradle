@@ -40,6 +40,9 @@ android {
         Nduo {
             manifestPlaceholders(["CATEGORY": "Nduo", "YOUMI_CHANNEL_ID": "10060"])
         }
+        yingyongbao {
+            manifestPlaceholders(["CATEGORY": "应用宝", "YOUMI_CHANNEL_ID": "30003"])
+        }
     }
     buildToolsVersion '23.0.2'
 }

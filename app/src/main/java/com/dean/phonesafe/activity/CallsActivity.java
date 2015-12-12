@@ -292,13 +292,11 @@ public class CallsActivity extends CounterActivity {
         System.arraycopy(mHits, 1, mHits, 0, mHits.length - 1);
         mHits[mHits.length - 1] = SystemClock.uptimeMillis();
         if (mHits[0] >= (SystemClock.uptimeMillis() - 2000)) {
+            if(ServiceUtil.existsService(this,TelService.class)){
+                ToastUtil.show(this,"后台持续拦截中");
+            }
             super.onBackPressed();
         } else {
-//            if (mToast == null) {
-//                mToast = Toast.makeText(this, "", Toast.LENGTH_SHORT);
-//            }
-//            mToast.setText("再按一次退出程序");
-//            mToast.show();
             ToastUtil.show(this,"再按一次退出程序");
         }
     }
