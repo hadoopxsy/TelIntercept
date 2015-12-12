@@ -6,8 +6,8 @@ android {
         applicationId "com.dean.phonesafe"
         minSdkVersion 14
         targetSdkVersion 22
-        versionName '1.1'
-        versionCode 2
+        versionName '1.3'
+        versionCode 4
     }
     buildTypes {
         release {
@@ -30,6 +30,15 @@ android {
         }
         star {
             manifestPlaceholders(["CATEGORY": "star", "YOUMI_CHANNEL_ID": "10090"])
+        }
+        mumayi {
+            manifestPlaceholders(["CATEGORY": "mumayi", "YOUMI_CHANNEL_ID": "10070"])
+        }
+        yiyou {
+            manifestPlaceholders(["CATEGORY": "yiyou", "YOUMI_CHANNEL_ID": "10120"])
+        }
+        Nduo {
+            manifestPlaceholders(["CATEGORY": "Nduo", "YOUMI_CHANNEL_ID": "10060"])
         }
     }
     buildToolsVersion '23.0.2'

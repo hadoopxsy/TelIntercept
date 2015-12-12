@@ -44,7 +44,15 @@
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 app:desc="拦截模式已关闭"
-                app:title="开启电话拦截"/>
+                app:title="开启来电拦截"/>
+
+            <com.dean.phonesafe.ui.SettingCheckView
+                android:id="@+id/scv_show_notify"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                app:desc="拦截来电后显示在通知栏"
+                app:isOpen="true"
+                app:title="显示拦截通知"/>
 
             <com.dean.phonesafe.ui.SettingCheckView
                 android:id="@+id/scv_allow_contacts"
@@ -53,6 +61,7 @@
                 app:desc="联系人中的号码来电时放行"
                 app:isOpen="true"
                 app:title="允许联系人号码"/>
+
 
             <com.dean.phonesafe.ui.SettingArrowView
                 android:id="@+id/sav_setting_white_list"
@@ -67,12 +76,14 @@
                 android:layout_height="wrap_content"
                 app:desc="设置禁止来电号码，拦截漏网之鱼"
                 app:title="号码黑名单"/>
+
             <com.dean.phonesafe.ui.SettingArrowView
                 android:id="@+id/sav_setting_set"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 app:desc="拦截来电后对方听到的提示音"
                 app:title="拦截回复音"/>
+
             <com.dean.phonesafe.ui.SettingArrowView
                 android:id="@+id/sav_setting_about"
                 android:layout_width="match_parent"

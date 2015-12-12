@@ -1,27 +1,39 @@
 package com.dean.phonesafe.service;
 
+import android.app.AlarmManager;
+import android.app.NotificationManager;
+import android.app.PendingIntent;
 import android.app.Service;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.database.ContentObserver;
 import android.os.Handler;
 import android.os.IBinder;
+import android.os.SystemClock;
 import android.provider.CallLog;
 import android.provider.ContactsContract;
 import android.support.annotation.Nullable;
+import android.support.v4.app.NotificationCompat;
 import android.telephony.PhoneStateListener;
 import android.telephony.TelephonyManager;
+import android.text.TextUtils;
+import android.widget.RemoteViews;
 
 import com.android.internal.telephony.ITelephony;
+import com.dean.phonesafe.R;
+import com.dean.phonesafe.activity.CallsActivity;
 import com.dean.phonesafe.db.AddressDao;
 import com.dean.phonesafe.db.DataDao;
 import com.dean.phonesafe.db.HappyDbDao;
+import com.dean.phonesafe.receiver.AlarmReceiver;
 import com.dean.phonesafe.utils.AreaNameUtil;
 import com.dean.phonesafe.utils.ContactUtil;
 import com.umeng.analytics.MobclickAgent;
 
 import java.lang.reflect.Method;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 
@@ -43,7 +55,7 @@ public class TelService extends Service {
     private List<String> mWhiteListAreaNameList;
     private WhiteListObserver mWhiteListObserver;
     private CallsContentObserver mCallsContentObserver;
-    //    MediaPlayer mediaPlayer=new MediaPlayer();
+    private NotificationManager mNotificationManager;
 
     @Nullable
     @Override
@@ -54,6 +66,12 @@ public class TelService extends Service {
     @Override
     public void onCreate() {
         super.onCreate();
+//        DebugLog.d("onCreate");
+        initService();
+    }
+
+    //初始化各个监听器，读取联系人
+    private void initService() {
         mDataDao = DataDao.getInstance(this);
         mHappyDbDao = HappyDbDao.getInstance(this);
         mAddressDao = AddressDao.getInstance(this);
@@ -83,6 +101,41 @@ public class TelService extends Service {
         //尝试修改通话记录
         getContentResolver().delete(CallLog.Calls.CONTENT_URI, CallLog.Calls.NUMBER + "=?", new String[]{""});
         //DebugLog.d("main_id:" + Thread.currentThread().getId());
+        //点击通知栏面板广播
+        mNotificationManager = (NotificationManager) getSystemService(NOTIFICATION_SERVICE);
+    }
+
+    //将拦截的来电显示到通知栏
+    private void showNotify(String number, String areaName) {
+        //创建通知栏，只有拦截到来电时才显示它
+        NotificationCompat.Builder builder = new NotificationCompat.Builder(this);
+        RemoteViews remoteViews = new RemoteViews(getPackageName(), R.layout.notify_custom);
+        Intent intent = new Intent(this, CallsActivity.class);
+        remoteViews.setImageViewResource(R.id.iv_icon, R.mipmap.ic_launcher);
+        //更新通知栏记录
+        remoteViews.setTextViewText(R.id.tv_number, number);
+        remoteViews.setTextViewText(R.id.tv_area_name, areaName);
+        SimpleDateFormat dateFormat = new SimpleDateFormat("HH:mm");
+        String date = dateFormat.format(new Date());
+        remoteViews.setTextViewText(R.id.tv_date, date);
+        builder.setAutoCancel(true).
+                setTicker("拦截来电" + number).
+                setContent(remoteViews).
+                setSmallIcon(R.mipmap.ic_launcher).
+                setContentIntent(PendingIntent.getActivity(this, 0, intent, 0));
+        mNotificationManager.notify(1, builder.build());
+    }
+
+    @Override
+    public int onStartCommand(Intent intent, int flags, int startId) {
+        AlarmManager alarmManager = (AlarmManager) getSystemService(ALARM_SERVICE);
+        //下次间隔多少秒开启服务
+        //DebugLog.d("设置10秒后启动服务");
+        //每隔1分钟启动服务，防止服务被系统杀死
+        long triggerAtTime = SystemClock.elapsedRealtime() + 1 * 60 * 1000;
+        PendingIntent pendingIntent = PendingIntent.getBroadcast(this, 0, new Intent(this, AlarmReceiver.class), 0);
+        alarmManager.set(AlarmManager.ELAPSED_REALTIME_WAKEUP, triggerAtTime, pendingIntent);
+        return super.onStartCommand(intent, flags, startId);
     }
 
     private void loadData() {
@@ -151,6 +204,7 @@ public class TelService extends Service {
         getContentResolver().unregisterContentObserver(mBlackListObserver);
         //注销白名单表的观察者
         getContentResolver().unregisterContentObserver(mWhiteListObserver);
+//        DebugLog.d("onDestroy");
     }
 
     //来电回调
@@ -170,12 +224,6 @@ public class TelService extends Service {
         public void onCallStateChanged(int state, final String incomingNumber) {
             switch (state) {
                 case TelephonyManager.CALL_STATE_RINGING:
-                    //接通电话
-                    //DebugLog.d("接通电话");
-                    //                    requestAnswerCall();
-                    //                    return;
-                    //                    DebugLog.d("正在响铃，来电号码：" + incomingNumber);
-                    //优先判断是否为黑名单号码
                     //DebugLog.d("current_id:" + Thread.currentThread().getId());
                     //由于该回调方法运行在主线程，所以耗时操作需要另外开启一个线程来执行
                     new Thread() {
@@ -208,7 +256,7 @@ public class TelService extends Service {
             }
 
             boolean endCall = false;
-            String simpleCity = "未知城市";
+            String simpleCity = "";
             //判断是否在白名单中
             if (incomingNumber.matches(mMobile_number_exp)) {
                 //DebugLog.d("查询来电号码 " + incomingNumber + " 的归属地");
@@ -262,6 +310,9 @@ public class TelService extends Service {
                 //DebugLog.d("电话被拦截");
                 //保存拦截记录
                 String totalAreaName = mDataDao.getTotalAreaName(whiteListAreaName);
+                if (TextUtils.isEmpty(totalAreaName)) {
+                    totalAreaName = "未知归属地";
+                }
                 //DebugLog.d("添加拦截记录：" + incomingNumber + "，" + totalAreaName);
                 mHappyDbDao.addCall(incomingNumber, totalAreaName);
                 //友盟统计拦截来电次数
@@ -269,13 +320,20 @@ public class TelService extends Service {
                 map.put("incomingNumber", incomingNumber);
                 map.put("city", totalAreaName);
                 MobclickAgent.onEvent(TelService.this, "interceptIncoming", map);
+                //判断是否需要显示拦截通知
+                boolean showNotify = mSharedPreferences.getBoolean("show_notify", true);
+                if (showNotify) {
+                    //在通知栏显示拦截通知
+                    showNotify(incomingNumber, totalAreaName);
+                }
+
             } catch (Exception e) {
                 e.printStackTrace();
             }
         }
     }
 
-    //来电记录被修改时清除已拦截的来电号码
+    //系统来电记录被修改时清除已拦截的来电号码
     class CallsContentObserver extends ContentObserver {
 
         /**
@@ -323,44 +381,6 @@ public class TelService extends Service {
         }
     }
 
-    /**
-     * 请求接通电话
-     */
-    //    private void requestAnswerCall() {
-    //        try {
-    //            Class cls = getClassLoader().loadClass("android.os.ServiceManager");
-    //            Method method = cls.getDeclaredMethod("getService", String.class);
-    //            IBinder binder = (IBinder) method.invoke(null, TELEPHONY_SERVICE);
-    //            ITelephony telephony = ITelephony.Stub.asInterface(binder);
-    //            telephony.silenceRinger();//静音
-    //            telephony.answerRingingCall();//接通电话
-    //        } catch (Exception e) {
-    //            e.printStackTrace();
-    //            //模拟按键接听
-    //            Intent buttonDown = new Intent(Intent.ACTION_MEDIA_BUTTON);
-    //            buttonDown.putExtra(Intent.EXTRA_KEY_EVENT, new KeyEvent(KeyEvent.ACTION_DOWN, KeyEvent.KEYCODE_HEADSETHOOK));
-    //            sendOrderedBroadcast(buttonDown, "android.permission.CALL_PRIVILEGED");
-    //
-    //            // froyo and beyond trigger on buttonUp instead of buttonDown
-    //            Intent buttonUp = new Intent(Intent.ACTION_MEDIA_BUTTON);
-    //            buttonUp.putExtra(Intent.EXTRA_KEY_EVENT, new KeyEvent(KeyEvent.ACTION_UP, KeyEvent.KEYCODE_HEADSETHOOK));
-    //            sendOrderedBroadcast(buttonUp, "android.permission.CALL_PRIVILEGED");
-    //            new Thread(){
-    //                @Override
-    //                public void run() {
-    //                    try {
-    //                        Thread.sleep(1000);
-    //                        //DebugLog.d("播放音乐");
-    //                        mediaPlayer.start();
-    //                    } catch (Exception e1) {
-    //                        e1.printStackTrace();
-    //                    }
-    //                }
-    //            }.start();
-    //
-    //        }
-    //    }
-
     //联系人发生变更时重新读取联系人
     class ContactObserver extends ContentObserver {
 
@@ -402,4 +422,47 @@ public class TelService extends Service {
         }
 
     }
+
+
 }
+/////////////////////////////////////以下代码暂时没有用到////////////////////////////////////////////////////////
+/////////////////////////////////////以下代码暂时没有用到////////////////////////////////////////////////////////
+/////////////////////////////////////以下代码暂时没有用到////////////////////////////////////////////////////////
+
+/**
+ * 请求接通电话
+ */
+//    private void requestAnswerCall() {
+//        try {
+//            Class cls = getClassLoader().loadClass("android.os.ServiceManager");
+//            Method method = cls.getDeclaredMethod("getService", String.class);
+//            IBinder binder = (IBinder) method.invoke(null, TELEPHONY_SERVICE);
+//            ITelephony telephony = ITelephony.Stub.asInterface(binder);
+//            telephony.silenceRinger();//静音
+//            telephony.answerRingingCall();//接通电话
+//        } catch (Exception e) {
+//            e.printStackTrace();
+//            //模拟按键接听
+//            Intent buttonDown = new Intent(Intent.ACTION_MEDIA_BUTTON);
+//            buttonDown.putExtra(Intent.EXTRA_KEY_EVENT, new KeyEvent(KeyEvent.ACTION_DOWN, KeyEvent.KEYCODE_HEADSETHOOK));
+//            sendOrderedBroadcast(buttonDown, "android.permission.CALL_PRIVILEGED");
+//
+//            // froyo and beyond trigger on buttonUp instead of buttonDown
+//            Intent buttonUp = new Intent(Intent.ACTION_MEDIA_BUTTON);
+//            buttonUp.putExtra(Intent.EXTRA_KEY_EVENT, new KeyEvent(KeyEvent.ACTION_UP, KeyEvent.KEYCODE_HEADSETHOOK));
+//            sendOrderedBroadcast(buttonUp, "android.permission.CALL_PRIVILEGED");
+//            new Thread(){
+//                @Override
+//                public void run() {
+//                    try {
+//                        Thread.sleep(1000);
+//                        //DebugLog.d("播放音乐");
+//                        mediaPlayer.start();
+//                    } catch (Exception e1) {
+//                        e1.printStackTrace();
+//                    }
+//                }
+//            }.start();
+//
+//        }
+//    }

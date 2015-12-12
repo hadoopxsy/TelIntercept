@@ -1,5 +1,7 @@
 package com.dean.phonesafe.activity;
 
+import android.app.AlarmManager;
+import android.app.PendingIntent;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.SharedPreferences;
@@ -9,6 +11,7 @@ import android.support.v7.app.AlertDialog;
 import android.view.View;
 
 import com.dean.phonesafe.R;
+import com.dean.phonesafe.receiver.AlarmReceiver;
 import com.dean.phonesafe.service.TelService;
 import com.dean.phonesafe.ui.SettingCheckView;
 import com.dean.phonesafe.utils.MobileUtil;
@@ -26,6 +29,8 @@ public class SettingActivity extends CounterActivity implements SettingCheckView
     SettingCheckView mScvEnableTelService;
     @Bind(R.id.scv_allow_contacts)
     SettingCheckView mScvAllowContacts;
+    @Bind(R.id.scv_show_notify)
+    SettingCheckView mScvShowNotify;
     private SharedPreferences mSharedPreferences;
 
     @Override
@@ -43,6 +48,9 @@ public class SettingActivity extends CounterActivity implements SettingCheckView
         mSharedPreferences = getSharedPreferences("config", MODE_PRIVATE);
         mScvAllowContacts.setChecked(mSharedPreferences.getBoolean("allow_contacts", true));
         mScvAllowContacts.setOnCheckedChangeListener(this);
+
+        mScvShowNotify.setChecked(mSharedPreferences.getBoolean("show_notify",true));
+        mScvShowNotify.setOnCheckedChangeListener(this);
     }
 
     //点击标题中的返回
@@ -61,24 +69,36 @@ public class SettingActivity extends CounterActivity implements SettingCheckView
 
     @Override
     public void onCheckedChanged(SettingCheckView view, boolean isChecked) {
+        SharedPreferences.Editor edit=null;
         switch (view.getId()) {
             case R.id.scv_enable_tel_service:
                 Intent intent = new Intent(SettingActivity.this, TelService.class);
                 //根据用户设置的勾选状态来开启/停止拦截服务
                 if (isChecked)
                     startService(intent);
-                else
+                else {
                     stopService(intent);
+                    //取消定时器
+                    AlarmManager alarmManager= (AlarmManager) getSystemService(ALARM_SERVICE);
+                    alarmManager.cancel(PendingIntent.getBroadcast(this,0,new Intent(this, AlarmReceiver.class),0));
+                }
                 view.setDescription(isChecked ? "拦截模式已开启" : "拦截模式已关闭");
                 break;
             case R.id.scv_allow_contacts:
                 //保存是否允许联系人拨入
-                SharedPreferences.Editor edit = mSharedPreferences.edit();
+                edit = mSharedPreferences.edit();
                 edit.putBoolean("allow_contacts", isChecked);
+                edit.commit();
+                break;
+            case R.id.scv_show_notify:
+                //显示通知栏
+                edit = mSharedPreferences.edit();
+                edit.putBoolean("show_notify", isChecked);
                 edit.commit();
                 break;
         }
     }
+
 
     //点击白名单
     @OnClick(R.id.sav_setting_white_list)
@@ -180,10 +200,11 @@ public class SettingActivity extends CounterActivity implements SettingCheckView
     class DialogClickListener implements DialogInterface.OnClickListener {
         /**
          * 初始化单选对话框点击事件
+         *
          * @param which 最后选中的项
          */
-        public DialogClickListener(int which){
-            mWhich=which;
+        public DialogClickListener(int which) {
+            mWhich = which;
         }
 
         /**

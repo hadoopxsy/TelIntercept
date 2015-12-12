@@ -33,7 +33,7 @@ public class AddressDao {
      * 通过手机号码前7位查询归属地
      *
      * @param number
-     * @return
+     * @return 未查询到返回""空字符串
      */
     public String getAreaNameByMobileNumber(String number) {
         String areaName = "";

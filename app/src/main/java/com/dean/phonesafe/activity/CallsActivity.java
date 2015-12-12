@@ -6,10 +6,12 @@ import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.database.ContentObserver;
+import android.net.Uri;
 import android.os.AsyncTask;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.SystemClock;
+import android.provider.ContactsContract;
 import android.support.v7.app.AlertDialog;
 import android.view.KeyEvent;
 import android.view.MenuInflater;
@@ -24,15 +26,19 @@ import android.widget.LinearLayout;
 import android.widget.ListView;
 import android.widget.PopupMenu;
 import android.widget.TextView;
-import android.widget.Toast;
 
 import com.dean.phonesafe.R;
 import com.dean.phonesafe.db.HappyDbDao;
 import com.dean.phonesafe.domain.Call;
 import com.dean.phonesafe.service.TelService;
+import com.dean.phonesafe.utils.ContactUtil;
+import com.dean.phonesafe.utils.IntentUtil;
 import com.dean.phonesafe.utils.ServiceUtil;
+import com.dean.phonesafe.utils.ToastUtil;
 import com.umeng.update.UmengUpdateAgent;
 
+import java.lang.reflect.Field;
+import java.lang.reflect.Method;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -57,7 +63,6 @@ public class CallsActivity extends CounterActivity {
     private List<Call> mCallList;
     private HappyDbDao mHappyDbDao;
     private long[] mHits;
-    private Toast mToast;
     private ContactContentObserver mContactContentObserver;
 
     @Override
@@ -69,7 +74,6 @@ public class CallsActivity extends CounterActivity {
         mHappyDbDao = HappyDbDao.getInstance(this);
         //用于双击后退键退出程序
         mHits = new long[2];
-
         //初始化电话联系人观察者，白名单表变更时刷新窗口，窗口可见时注册观察者，窗口不可见时注销观察者
         mContactContentObserver = new ContactContentObserver(new Handler());
         mCallList = new ArrayList<>();
@@ -80,33 +84,68 @@ public class CallsActivity extends CounterActivity {
 
             @Override
             public boolean onItemLongClick(AdapterView<?> parent, View view, final int position, long id) {
-                //弹出复制菜单
-                PopupMenu popup = new PopupMenu(CallsActivity.this, view);
-                MenuInflater inflater = popup.getMenuInflater();
-                inflater.inflate(R.menu.actions, popup.getMenu());
-                popup.setOnMenuItemClickListener(new PopupMenu.OnMenuItemClickListener() {
-                    @Override
-                    public boolean onMenuItemClick(MenuItem item) {
-                        Call call = mCallList.get(position);
-                        switch (item.getItemId()) {
-                            case R.id.menu_copy:
-                                //复制号码到剪切板
-                                ClipboardManager clipboardManager = (ClipboardManager) getSystemService(CLIPBOARD_SERVICE);
-                                clipboardManager.setText(call.getNumber());
-                                if (mToast == null) {
-                                    mToast = Toast.makeText(CallsActivity.this, "", Toast.LENGTH_SHORT);
-                                }
-                                mToast.setText("号码已复制");
-                                mToast.show();
-                                break;
-                        }
-                        return false;
-                    }
-                });
-                popup.show();
+                //显示弹出菜单
+                openPopupMenu(view, position);
                 return true;
             }
         });
+    }
+
+    //长按拦截的号码项时显示弹出菜单
+    private void openPopupMenu(View view, final int position) {
+        //弹出复制菜单
+        PopupMenu popup = new PopupMenu(CallsActivity.this, view);
+        //默认情况下不会显示菜单左侧的图标，下面利用反射机制显示快捷菜单左侧的图标
+        try {
+            Field field = popup.getClass().getDeclaredField("mPopup");
+            field.setAccessible(true);
+            Object mHelper = field.get(popup);
+            Method setForceShowIcon = mHelper.getClass().getDeclaredMethod("setForceShowIcon", boolean.class);
+            setForceShowIcon.invoke(mHelper, true);
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        MenuInflater inflater = popup.getMenuInflater();
+        inflater.inflate(R.menu.calls_popup_menu, popup.getMenu());
+        popup.setOnMenuItemClickListener(new PopupMenu.OnMenuItemClickListener() {
+            @Override
+            public boolean onMenuItemClick(MenuItem item) {
+                Intent intent = null;
+                Call call = mCallList.get(position);
+                switch (item.getItemId()) {
+                    case R.id.menu_copy:
+                        //复制号码到剪切板
+                        ClipboardManager clipboardManager = (ClipboardManager) getSystemService(CLIPBOARD_SERVICE);
+                        clipboardManager.setText(call.getNumber());
+                        ToastUtil.show(CallsActivity.this,"号码已复制");
+                        break;
+                    case R.id.menu_call:
+                        //呼叫拦截的号码
+                        intent = new Intent(Intent.ACTION_CALL);
+                        intent.setData(Uri.parse("tel:" + call.getNumber()));
+                        startActivity(intent);
+                        break;
+                    case R.id.menu_contact:
+                        if(ContactUtil.existsNumber(getApplicationContext(),call.getNumber())){
+                            ToastUtil.show(CallsActivity.this,"该号码已经在联系人中");
+                        }else {
+                            //添加这个号码为联系人
+                            intent = new Intent(ContactsContract.Intents.Insert.ACTION);
+                            intent.setType(ContactsContract.Contacts.CONTENT_TYPE);
+                            intent.putExtra(ContactsContract.Intents.Insert.PHONE, call.getNumber());
+
+                            if (!IntentUtil.isIntentAvailable(getApplicationContext(), intent)) {
+                                ToastUtil.show(CallsActivity.this, "无法添加联系人");
+                            } else {
+                                startActivity(intent);
+                            }
+                        }
+                        break;
+                }
+                return false;
+            }
+        });
+        popup.show();
     }
 
     //按菜单键跳到设置界面
@@ -163,7 +202,6 @@ public class CallsActivity extends CounterActivity {
             protected void onPreExecute() {
                 mProgressDialog = new ProgressDialog(CallsActivity.this);
                 mProgressDialog.setMessage("努力加载中...");
-                mProgressDialog.setCancelable(false);
                 mProgressDialog.show();
             }
 
@@ -172,7 +210,8 @@ public class CallsActivity extends CounterActivity {
                 //查询历史拦截记录
                 mCallList.clear();
                 mCallList.addAll(mHappyDbDao.getAllCall());
-                mProgressDialog.dismiss();
+                if (mProgressDialog.isShowing())
+                    mProgressDialog.dismiss();
                 return mCallList;
             }
 
@@ -183,7 +222,7 @@ public class CallsActivity extends CounterActivity {
                 if (calls.size() == 0) {
                     if (!ServiceUtil.existsService(CallsActivity.this, TelService.class)) {
                         //没有开启服务时提示“马上设置”
-                        mTvNoRecord.setText("暂无拦截记录\n需要在设置中开启拦截服务");
+                        mTvNoRecord.setText("暂无拦截记录\n需要在设置中开启来电拦截");
                         mBtSetting.setVisibility(View.VISIBLE);
                     } else {
                         mTvNoRecord.setText("暂无拦截记录");
@@ -255,11 +294,12 @@ public class CallsActivity extends CounterActivity {
         if (mHits[0] >= (SystemClock.uptimeMillis() - 2000)) {
             super.onBackPressed();
         } else {
-            if (mToast == null) {
-                mToast = Toast.makeText(this, "", Toast.LENGTH_SHORT);
-            }
-            mToast.setText("再按一次退出程序");
-            mToast.show();
+//            if (mToast == null) {
+//                mToast = Toast.makeText(this, "", Toast.LENGTH_SHORT);
+//            }
+//            mToast.setText("再按一次退出程序");
+//            mToast.show();
+            ToastUtil.show(this,"再按一次退出程序");
         }
     }
 

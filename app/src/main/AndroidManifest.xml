@@ -7,7 +7,6 @@
     <uses-permission android:name="android.permission.CALL_PHONE"/>
     <uses-permission android:name="android.permission.READ_CONTACTS"/>
     <uses-permission android:name="android.permission.WRITE_CONTACTS"/>
-    <uses-permission android:name="android.permission.MODIFY_PHONE_STATE"/>
     <!-- 有米广告所需权限 -->
     <uses-permission android:name="android.permission.INTERNET"/>
     <uses-permission android:name="android.permission.READ_PHONE_STATE"/>
@@ -44,6 +43,7 @@
             android:name=".activity.BlackListActivity"
             android:screenOrientation="portrait"/>
         <activity
+            android:launchMode="singleTask"
             android:name=".activity.CallsActivity"
             android:screenOrientation="portrait"/>
         <activity
@@ -59,7 +59,7 @@
             </intent-filter>
         </activity>
 
-
+        <receiver android:name=".receiver.AlarmReceiver"/>
         <service android:name=".service.TelService"/>
         <!-- 有米广告 -->
         <meta-data

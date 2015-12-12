@@ -53,7 +53,7 @@ public class ContactUtil {
     }
 
     /**
-     * 判断某个号码是否存在于联系人中
+     * 判断某个号码是否存在于给定的联系人集合中
      *
      * @param contactList
      * @param number
@@ -71,6 +71,20 @@ public class ContactUtil {
 
         return false;
     }
+
+    /**
+     * 判断某个号码是否在手机的联系人当中
+     * @param number
+     * @return
+     */
+    public static boolean existsNumber(Context context,String number){
+        boolean exists=false;
+        Cursor dataCursor = context.getContentResolver().query(ContactsContract.Data.CONTENT_URI, new String[]{ContactsContract.Data.DATA1}, ContactsContract.CommonDataKinds.Phone.NUMBER + " = ?", new String[]{number}, null);
+        exists = dataCursor.getCount()>0;
+        dataCursor.close();
+        return exists;
+    }
+
 
     /**
      * 新增一个联系人
@@ -91,7 +105,6 @@ public class ContactUtil {
         if (id == 0)
             return 0;
         //在view_data表添加一条记录
-        DebugLog.d("添加电话");
         contentValues.clear();
         //添加电话号码记录
         contentValues.put("raw_contact_id",id);
@@ -99,7 +112,6 @@ public class ContactUtil {
         contentValues.put("data1", number);
         context.getContentResolver().insert(ContactsContract.Data.CONTENT_URI, contentValues);
         //添加姓名记录
-        DebugLog.d("添加号码");
         contentValues.clear();
         contentValues.put("raw_contact_id", id);
         contentValues.put("mimetype", "vnd.android.cursor.item/name");

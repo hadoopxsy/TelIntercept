@@ -10,7 +10,7 @@ public class AreaNameUtil {
      * 传入以空格间隔的省份名+城市名，返回如“湖南 湘潭”的5个字符长度的字符串
      *
      * @param areaName
-     * @return 返回包含空格在内的5个长度的字符串，如：湖南 湘潭
+     * @return 返回包含空格在内的5个长度的字符串，如：湖南 湘潭，否则返回""
      */
     public static String getAvailAreaName(String areaName) {
         if (TextUtils.isEmpty(areaName)) {

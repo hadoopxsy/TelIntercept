@@ -10,6 +10,7 @@ import android.widget.Toast;
 import com.dean.phonesafe.BuildConfig;
 import com.dean.phonesafe.R;
 import com.dean.phonesafe.ui.TitleDescView;
+import com.dean.phonesafe.utils.ToastUtil;
 import com.umeng.onlineconfig.OnlineConfigAgent;
 import com.umeng.socialize.bean.SHARE_MEDIA;
 import com.umeng.socialize.controller.UMServiceFactory;
@@ -73,7 +74,8 @@ public class AboutActivity extends CounterActivity {
                         UmengUpdateAgent.showUpdateDialog(AboutActivity.this, updateInfo);
                         break;
                     case UpdateStatus.No: // has no update
-                        Toast.makeText(AboutActivity.this, "您已经是最新版本", Toast.LENGTH_SHORT).show();
+//                        Toast.makeText(AboutActivity.this, "您已经是最新版本", Toast.LENGTH_SHORT).show();
+                        ToastUtil.show(AboutActivity.this,"您已经是最新版本");
                         break;
                     case UpdateStatus.NoneWifi: // none wifi
                         Toast.makeText(AboutActivity.this, "请连接至wifi下再更新", Toast.LENGTH_SHORT).show();

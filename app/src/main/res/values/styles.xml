@@ -31,4 +31,6 @@
         <item name="android:layout_centerVertical">true</item>
         <item name="android:layout_alignParentRight">true</item>
     </style>
+    <style name="NotificationTitle" parent="android:TextAppearance.StatusBar.EventContent.Title" />
+    <style name="NotificationContent" parent="android:TextAppearance.StatusBar.EventContent" />
 </resources>
